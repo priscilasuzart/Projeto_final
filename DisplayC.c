@@ -15,9 +15,15 @@
 #define BOTAO_B 6
 #define LED_VERDE 11
 #define LED_VERMELHO 13
+#define DEBOUNCE_DELAY 200 // Tempo de debounce em ms
 
 // Estrutura do display
 ssd1306_t ssd;
+
+volatile int resposta_atual = -1;
+
+// Declaração da função de callback
+void botao_callback(uint gpio, uint32_t eventos);
 
 // Inicializa o display SSD1306
 void inicializar_display() {
@@ -39,16 +45,37 @@ void inicializar_gpio() {
     gpio_init(BOTAO_A);
     gpio_set_dir(BOTAO_A, GPIO_IN);
     gpio_pull_up(BOTAO_A);
+    gpio_set_irq_enabled_with_callback(BOTAO_A, GPIO_IRQ_EDGE_FALL, true, &botao_callback);
 
     gpio_init(BOTAO_B);
     gpio_set_dir(BOTAO_B, GPIO_IN);
     gpio_pull_up(BOTAO_B);
+    gpio_set_irq_enabled_with_callback(BOTAO_B, GPIO_IRQ_EDGE_FALL, true, &botao_callback);
 
     gpio_init(LED_VERDE);
     gpio_set_dir(LED_VERDE, GPIO_OUT);
 
     gpio_init(LED_VERMELHO);
     gpio_set_dir(LED_VERMELHO, GPIO_OUT);
+}
+
+// Callback para interrupção dos botões
+void botao_callback(uint gpio, uint32_t eventos) {
+    static uint32_t ultimo_tempo = 0;
+    uint32_t tempo_atual = to_ms_since_boot(get_absolute_time());
+    
+    if (tempo_atual - ultimo_tempo < DEBOUNCE_DELAY) return;
+    ultimo_tempo = tempo_atual;
+    
+    if (gpio == BOTAO_A) {
+        resposta_atual = 1;
+        gpio_put(LED_VERDE, 1);
+        gpio_put(LED_VERMELHO, 0);
+    } else if (gpio == BOTAO_B) {
+        resposta_atual = 0;
+        gpio_put(LED_VERDE, 0);
+        gpio_put(LED_VERMELHO, 1);
+    }
 }
 
 // Função para exibir perguntas no display
@@ -65,18 +92,14 @@ void exibir_pergunta(const char *linha1, const char *linha2, const char *linha3,
     ssd1306_send_data(&ssd);
 }
 
-// Exibir resposta no display e acionar LED
-void exibir_resposta(const char *resposta, int led) {
+// Exibir resposta no display
+void exibir_resposta(const char *resposta) {
     ssd1306_fill(&ssd, false);
     ssd1306_rect(&ssd, 3, 3, 122, 58, true, false);
     ssd1306_draw_string(&ssd, "Resposta:", 8, 20);
     ssd1306_draw_string(&ssd, resposta, 8, 40);
     ssd1306_send_data(&ssd);
-    
-    gpio_put(LED_VERDE, led == LED_VERDE);
-    gpio_put(LED_VERMELHO, led == LED_VERMELHO);
     sleep_ms(5000);
-    
     gpio_put(LED_VERDE, 0);
     gpio_put(LED_VERMELHO, 0);
 }
@@ -98,20 +121,11 @@ void perguntas_anamnese() {
     int respostas[10];
     
     for (int i = 0; i < 10; i++) {
+        resposta_atual = -1;
         exibir_pergunta(perguntas[i][0], perguntas[i][1], perguntas[i][2], perguntas[i][3], perguntas[i][4]);
-        
-        while (true) {
-            if (!gpio_get(BOTAO_A)) {
-                respostas[i] = 1;
-                exibir_resposta("Sim", LED_VERDE);
-                break;
-            }
-            if (!gpio_get(BOTAO_B)) {
-                respostas[i] = 0;
-                exibir_resposta("Nao", LED_VERMELHO);
-                break;
-            }
-        }
+        while (resposta_atual == -1) tight_loop_contents();
+        respostas[i] = resposta_atual;
+        exibir_resposta(resposta_atual ? "Sim" : "Nao");
     }
 }
 
@@ -128,7 +142,6 @@ int main() {
         sleep_ms(3000);
 
         perguntas_anamnese();
-
         sleep_ms(5000); // Pausa antes de reiniciar o ciclo
     }
 }
