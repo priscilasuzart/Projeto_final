@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include <stdlib.h>
 #include "pico/stdlib.h"
 #include "hardware/i2c.h"
@@ -25,6 +26,15 @@ int main()
   // Limpa o display. O display inicia com todos os pixels apagados.
   ssd1306_fill(&ssd, false);
   ssd1306_send_data(&ssd);
+
+
+  stdio_init_all(); // Inicializa a comunicação serial
+
+  // Variáveis para armazenar os dados
+  int frequencia_cardiaca = 0;
+  int pressao_arterial = 0;
+  int frequencia_respiratoria = 0;
+
 
   bool cor = true;
   while (true)
@@ -160,6 +170,59 @@ int main()
     ssd1306_draw_string(&ssd, "SINAIS VITAIS", 15, 30); // Desenha a primeira pergunta
     ssd1306_send_data(&ssd); // Atualiza o display
     sleep_ms(5000); // Aguardar 5 segundos
+
+    // Pergunta 1: Frequência Cardíaca
+    printf("Insira o número de batimentos cardíacos por minuto (frequência cardíaca): ");
+    scanf("%d", &frequencia_cardiaca);
+
+    // Exibe a pergunta e a resposta no display
+    ssd1306_fill(&ssd, !cor); // Limpa o display
+    ssd1306_rect(&ssd, 3, 3, 122, 58, cor, !cor); // Desenha um retângulo
+    ssd1306_draw_string(&ssd, "Frequencia", 8, 20);
+    ssd1306_draw_string(&ssd, "Cardiaca:", 8, 30);
+    char buffer[20];
+    snprintf(buffer, sizeof(buffer), "%d bpm", frequencia_cardiaca); // Formata a resposta
+    ssd1306_draw_string(&ssd, buffer, 8, 40);
+    ssd1306_send_data(&ssd); // Atualiza o display
+    sleep_ms(5000); // Aguardar 5 segundos
+
+    // Pergunta 2: Pressão Arterial
+    printf("Insira o valor da pressão arterial aferida: ");
+    scanf("%d", &pressao_arterial);
+
+    // Exibe a pergunta e a resposta no display
+    ssd1306_fill(&ssd, !cor); // Limpa o display
+    ssd1306_rect(&ssd, 3, 3, 122, 58, cor, !cor); // Desenha um retângulo
+    ssd1306_draw_string(&ssd, "Pressao", 8, 20);
+    ssd1306_draw_string(&ssd, "Arterial:", 8, 30);
+    snprintf(buffer, sizeof(buffer), "%d mmHg", pressao_arterial); // Formata a resposta
+    ssd1306_draw_string(&ssd, buffer, 8, 40);
+    ssd1306_send_data(&ssd); // Atualiza o display
+    sleep_ms(5000); // Aguardar 5 segundos
+
+    // Pergunta 3: Frequência Respiratória
+    printf("Insira o número de respirações por minuto (frequência respiratória): ");
+    scanf("%d", &frequencia_respiratoria);
+
+    // Exibe a pergunta e a resposta no display
+    ssd1306_fill(&ssd, !cor); // Limpa o display
+    ssd1306_rect(&ssd, 3, 3, 122, 58, cor, !cor); // Desenha um retângulo
+    ssd1306_draw_string(&ssd, "Frequencia", 8, 10);
+    ssd1306_draw_string(&ssd, "Respiratoria:", 8, 20);
+    snprintf(buffer, sizeof(buffer), "%d mrpm", frequencia_respiratoria); // Formata a resposta
+    ssd1306_draw_string(&ssd, buffer, 8, 40);
+    ssd1306_send_data(&ssd); // Atualiza o display
+    sleep_ms(5000); // Aguardar 5 segundos
+
+    // Exibe o resumo das informações no Serial Monitor
+    printf("\nResumo dos sinais vitais:\n");
+    printf("Frequencia Cardiaca: %d bpm\n", frequencia_cardiaca);
+    printf("Pressao Arterial: %d mmHg\n", pressao_arterial);
+    printf("Frequencia Respiratoria: %d rpm\n", frequencia_respiratoria);
+
+    sleep_ms(5000); // Aguardar antes de reiniciar
+
+
 
   }
 }
