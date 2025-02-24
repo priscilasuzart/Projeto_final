@@ -134,11 +134,23 @@ void sinais_vitais() {
     char input[16];
     int frequencia_cardiaca, pressao_arterial_sistolica, pressao_arterial_diastolica, frequencia_respiratoria;
 
+    // Solicitar a frequência cardíaca e exibir no serial monitor
     printf("Digite a frequencia cardiaca (bpm): ");
     scanf("%d", &frequencia_cardiaca);  
     printf("Frequencia cardiaca: %d bpm\n", frequencia_cardiaca);
     sleep_ms(5000);
 
+    // Exibir no display
+    ssd1306_fill(&ssd, false);
+    ssd1306_draw_string(&ssd, "Frequencia", 8, 10);
+    ssd1306_draw_string(&ssd, "cardiaca:", 8, 20);
+    char str[16];  // Vetor maior para armazenar o valor convertido para string
+    snprintf(str, sizeof(str), "%d bpm", frequencia_cardiaca);  // Converter o inteiro para string
+    ssd1306_draw_string(&ssd, str, 8, 30);  // Exibe o valor no display
+    ssd1306_send_data(&ssd);
+    sleep_ms(3000);
+
+    // Solicitar e exibir a pressão arterial
     printf("Digite a pressao arterial sistolica (mmHg): ");
     scanf("%d", &pressao_arterial_sistolica);
     printf("Digite a pressao arterial diastolica (mmHg): ");
@@ -146,11 +158,31 @@ void sinais_vitais() {
     printf("Pressao arterial: %d x %d mmHg\n", pressao_arterial_sistolica, pressao_arterial_diastolica);
     sleep_ms(5000);
 
+    // Exibir no display
+    ssd1306_fill(&ssd, false);
+    ssd1306_draw_string(&ssd, "Pressao", 8, 10);
+    ssd1306_draw_string(&ssd, "arterial:", 8, 20);
+    snprintf(str, sizeof(str), "%d x %d mmHg", pressao_arterial_sistolica, pressao_arterial_diastolica);  // Converter pressão arterial para string
+    ssd1306_draw_string(&ssd, str, 8, 30);  // Exibe o valor no display
+    ssd1306_send_data(&ssd);
+    sleep_ms(3000);
+
+    // Solicitar e exibir a frequência respiratória
     printf("Digite a frequencia respiratoria (mrpm): ");
     scanf("%d", &frequencia_respiratoria);
     printf("Frequencia respiratoria: %d mrpm\n", frequencia_respiratoria);
     sleep_ms(5000);
+
+    // Exibir no display
+    ssd1306_fill(&ssd, false);
+    ssd1306_draw_string(&ssd, "Frequencia", 8, 10);
+    ssd1306_draw_string(&ssd, "respiratoria:", 8, 20);
+    snprintf(str, sizeof(str), "%d mrpm", frequencia_respiratoria);  // Converter frequência respiratória para string
+    ssd1306_draw_string(&ssd, str, 8, 30);  // Exibe o valor no display
+    ssd1306_send_data(&ssd);
+    sleep_ms(3000);
 }
+
 
 int main() {
     stdio_init_all(); // Inicializa a comunicação serial
@@ -169,7 +201,7 @@ int main() {
 
         // Sinais vitais no display
         ssd1306_fill(&ssd, false);
-        ssd1306_draw_string(&ssd, "SINAIS VITAIS", 30, 30);
+        ssd1306_draw_string(&ssd, "SINAIS VITAIS", 10, 30);
         ssd1306_send_data(&ssd);
         sleep_ms(3000);
 
