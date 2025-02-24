@@ -129,6 +129,29 @@ void perguntas_anamnese() {
     }
 }
 
+// Função para capturar sinais vitais via serial e exibir no display
+void sinais_vitais() {
+    char input[16];
+    int frequencia_cardiaca, pressao_arterial_sistolica, pressao_arterial_diastolica, frequencia_respiratoria;
+
+    printf("Digite a frequencia cardiaca (bpm): ");
+    scanf("%d", &frequencia_cardiaca);  
+    printf("Frequencia cardiaca: %d bpm\n", frequencia_cardiaca);
+    sleep_ms(5000);
+
+    printf("Digite a pressao arterial sistolica (mmHg): ");
+    scanf("%d", &pressao_arterial_sistolica);
+    printf("Digite a pressao arterial diastolica (mmHg): ");
+    scanf("%d", &pressao_arterial_diastolica);
+    printf("Pressao arterial: %d x %d mmHg\n", pressao_arterial_sistolica, pressao_arterial_diastolica);
+    sleep_ms(5000);
+
+    printf("Digite a frequencia respiratoria (mrpm): ");
+    scanf("%d", &frequencia_respiratoria);
+    printf("Frequencia respiratoria: %d mrpm\n", frequencia_respiratoria);
+    sleep_ms(5000);
+}
+
 int main() {
     stdio_init_all(); // Inicializa a comunicação serial
     inicializar_display();
@@ -143,5 +166,15 @@ int main() {
 
         perguntas_anamnese();
         sleep_ms(5000); // Pausa antes de reiniciar o ciclo
+
+        // Sinais vitais no display
+        ssd1306_fill(&ssd, false);
+        ssd1306_draw_string(&ssd, "SINAIS VITAIS", 30, 30);
+        ssd1306_send_data(&ssd);
+        sleep_ms(3000);
+
+
+        // Sinais vitais
+        sinais_vitais();
     }
 }
