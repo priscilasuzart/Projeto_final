@@ -105,7 +105,7 @@ void exibir_resposta(const char *resposta) {
 }
 
 // Perguntas da anamnese e captura de resposta
-void perguntas_anamnese() {
+int perguntas_anamnese() {
     const char *perguntas[][5] = {
         {"Voce sente", "pressao para", "cumprir prazos", "apertados de", "entrega?"},
         {"Seu tempo de", "descanso eh", "suficiente", "antes da nova", "jornada?"},
@@ -119,6 +119,7 @@ void perguntas_anamnese() {
         {"Faz uso de", "medicacao", "continua?", NULL, NULL}
     };
     int respostas[10];
+    int pontuacao_anamnese = 0;
     
     for (int i = 0; i < 10; i++) {
         resposta_atual = -1;
@@ -126,19 +127,32 @@ void perguntas_anamnese() {
         while (resposta_atual == -1) tight_loop_contents();
         respostas[i] = resposta_atual;
         exibir_resposta(resposta_atual ? "Sim" : "Nao");
+        
+        // Calcula a pontuação da anamnese
+        if (i == 1) {
+            if (respostas[i] == 0) pontuacao_anamnese++; // Se a resposta for "Não", soma 1 ponto
+        } else {
+            if (respostas[i] == 1) pontuacao_anamnese++; // Se a resposta for "Sim", soma 1 ponto
+        }
     }
+    
+    return pontuacao_anamnese;
 }
 
 // Função para capturar sinais vitais via serial e exibir no display
-void sinais_vitais() {
+int sinais_vitais() {
     char input[16];
     int frequencia_cardiaca, pressao_arterial_sistolica, pressao_arterial_diastolica, frequencia_respiratoria;
+    int pontuacao_sinais_vitais = 0;
 
     // Solicitar a frequência cardíaca e exibir no serial monitor
     printf("Digite a frequencia cardiaca (bpm): ");
     scanf("%d", &frequencia_cardiaca);  
     printf("Frequencia cardiaca: %d bpm\n", frequencia_cardiaca);
     sleep_ms(5000);
+
+    // Verifica se a frequência cardíaca está fora da faixa normal
+    if (frequencia_cardiaca < 60 || frequencia_cardiaca > 100) pontuacao_sinais_vitais++;
 
     // Exibir no display
     ssd1306_fill(&ssd, false);
@@ -158,6 +172,10 @@ void sinais_vitais() {
     printf("Pressao arterial: %d x %d mmHg\n", pressao_arterial_sistolica, pressao_arterial_diastolica);
     sleep_ms(5000);
 
+    // Verifica se a pressão arterial está fora da faixa normal
+    if (pressao_arterial_sistolica < 100 || pressao_arterial_sistolica > 140 ||
+        pressao_arterial_diastolica < 60 || pressao_arterial_diastolica > 90) pontuacao_sinais_vitais++;
+
     // Exibir no display
     ssd1306_fill(&ssd, false);
     ssd1306_draw_string(&ssd, "Pressao", 8, 10);
@@ -173,6 +191,9 @@ void sinais_vitais() {
     printf("Frequencia respiratoria: %d mrpm\n", frequencia_respiratoria);
     sleep_ms(5000);
 
+    // Verifica se a frequência respiratória está fora da faixa normal
+    if (frequencia_respiratoria < 12 || frequencia_respiratoria > 20) pontuacao_sinais_vitais++;
+
     // Exibir no display
     ssd1306_fill(&ssd, false);
     ssd1306_draw_string(&ssd, "Frequencia", 8, 10);
@@ -181,8 +202,45 @@ void sinais_vitais() {
     ssd1306_draw_string(&ssd, str, 8, 30);  // Exibe o valor no display
     ssd1306_send_data(&ssd);
     sleep_ms(3000);
+
+    return pontuacao_sinais_vitais;
 }
 
+// Função para exibir o resultado da avaliação de fadiga
+void exibir_resultado_fadiga(int pontuacao_total) {
+    ssd1306_fill(&ssd, false);
+    ssd1306_rect(&ssd, 3, 3, 122, 58, true, false);
+    
+    if (pontuacao_total >= 0 && pontuacao_total <= 5) {
+        ssd1306_draw_string(&ssd, "Adequado", 8, 20);
+        ssd1306_draw_string(&ssd, "para conduzir", 8, 40);
+        gpio_put(LED_VERDE, 1);
+        gpio_put(LED_VERMELHO, 0);
+    } else if (pontuacao_total >= 6 && pontuacao_total <= 9) {
+        ssd1306_draw_string(&ssd, "Atencao!", 8, 20);
+        ssd1306_draw_string(&ssd, "Recomenda-se", 8, 40);
+        ssd1306_draw_string(&ssd, "descanso", 8, 50);
+        gpio_put(LED_VERDE, 0);
+        gpio_put(LED_VERMELHO, 1);
+    } else if (pontuacao_total >= 10 && pontuacao_total <= 13) {
+        ssd1306_draw_string(&ssd, "Alerta!", 8, 20);
+        ssd1306_draw_string(&ssd, "Descanso", 8, 40);
+        ssd1306_draw_string(&ssd, "imediato", 8, 50);
+        gpio_put(LED_VERDE, 0);
+        gpio_put(LED_VERMELHO, 1);
+    } else if (pontuacao_total >= 14 && pontuacao_total <= 18) {
+        ssd1306_draw_string(&ssd, "Perigo!", 8, 20);
+        ssd1306_draw_string(&ssd, "Repouso", 8, 40);
+        ssd1306_draw_string(&ssd, "urgente", 8, 50);
+        gpio_put(LED_VERDE, 0);
+        gpio_put(LED_VERMELHO, 1);
+    }
+    
+    ssd1306_send_data(&ssd);
+    sleep_ms(5000);
+    gpio_put(LED_VERDE, 0);
+    gpio_put(LED_VERMELHO, 0);
+}
 
 int main() {
     stdio_init_all(); // Inicializa a comunicação serial
@@ -196,7 +254,7 @@ int main() {
         ssd1306_send_data(&ssd);
         sleep_ms(3000);
 
-        perguntas_anamnese();
+        int pontuacao_anamnese = perguntas_anamnese();
         sleep_ms(5000); // Pausa antes de reiniciar o ciclo
 
         // Sinais vitais no display
@@ -205,8 +263,12 @@ int main() {
         ssd1306_send_data(&ssd);
         sleep_ms(3000);
 
+        int pontuacao_sinais_vitais = sinais_vitais();
 
-        // Sinais vitais
-        sinais_vitais();
+        // Calcula a pontuação total
+        int pontuacao_total = pontuacao_anamnese + (pontuacao_sinais_vitais * 2);
+
+        // Exibe o resultado da avaliação de fadiga
+        exibir_resultado_fadiga(pontuacao_total);
     }
 }
