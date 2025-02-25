@@ -3,9 +3,14 @@
 #include "pico/stdlib.h"
 #include "hardware/i2c.h"
 #include "hardware/gpio.h"
+#include "hardware/pio.h"
+#include "hardware/clocks.h"
+#include "hardware/timer.h"
 #include "inc/ssd1306.h"
 #include "inc/font.h"
+#include "ws2812.pio.h"
 
+//Definição das constantes
 #define I2C_PORT i2c1
 #define I2C_SDA 14
 #define I2C_SCL 15
@@ -16,6 +21,9 @@
 #define LED_VERDE 11
 #define LED_VERMELHO 13
 #define DEBOUNCE_DELAY 200 // Tempo de debounce em ms
+#define WS2812_PIN 7
+#define NUM_PIXELS 25
+#define IS_RGBW false
 
 // Estrutura do display
 ssd1306_t ssd;
@@ -24,6 +32,23 @@ volatile int resposta_atual = -1;
 
 // Declaração da função de callback
 void botao_callback(uint gpio, uint32_t eventos);
+
+// Função para enviar um pixel para a matriz de LEDs
+static inline void put_pixel(uint32_t pixel_grb) {
+    pio_sm_put_blocking(pio0, 0, pixel_grb << 8u);
+}
+
+// Função para converter RGB para formato de 32 bits
+static inline uint32_t urgb_u32(uint8_t r, uint8_t g, uint8_t b) {
+    return ((uint32_t)(g) << 16) | ((uint32_t)(r) << 8) | (uint32_t)(b);
+}
+
+// Função para desligar todos os LEDs da matriz
+void clear_led_matrix() {
+    for (int i = 0; i < NUM_PIXELS; i++) {
+        put_pixel(0); // Define todos os LEDs como apagados (R=0, G=0, B=0)
+    }
+}
 
 // Inicializa o display SSD1306
 void inicializar_display() {
@@ -57,6 +82,16 @@ void inicializar_gpio() {
 
     gpio_init(LED_VERMELHO);
     gpio_set_dir(LED_VERMELHO, GPIO_OUT);
+
+
+}
+
+// Inicializa o PIO e o controlador WS2812
+void inicializar_ws2812() {
+    PIO pio = pio0;
+    int sm = 0;
+    uint offset = pio_add_program(pio, &ws2812_program);
+    ws2812_program_init(pio, sm, offset, WS2812_PIN, 800000, IS_RGBW);
 }
 
 // Callback para interrupção dos botões
@@ -206,6 +241,44 @@ int sinais_vitais() {
     return pontuacao_sinais_vitais;
 }
 
+//Função da carinha feliz
+void exibir_carinha_feliz() {
+    // Padrão da carinha feliz na matriz de LED 5x5
+    const bool carinha_feliz[NUM_PIXELS] = {
+        0, 1, 1, 1, 0,  // Linha 1
+        1, 0, 0, 0, 1,  // Linha 2
+        0, 0, 0, 0, 0,  // Linha 3
+        0, 1, 0, 1, 0,  // Linha 4
+        0, 1, 0, 1, 0   // Linha 5
+    };
+
+    // Exibe o padrão na matriz de LED
+    for (int i = 0; i < NUM_PIXELS; i++) {
+        put_pixel(carinha_feliz[i] ? urgb_u32(0, 100, 0) : 0); // Verde para a carinha feliz
+    }
+
+    printf("Carinha feliz exibida na matriz de LED.\n");
+}
+
+// Função da carinha triste
+void exibir_carinha_triste() {
+    // Padrão da carinha triste na matriz de LED 5x5
+    const bool carinha_triste[NUM_PIXELS] = {
+        1, 0, 0, 0, 1,  // Linha 1
+        0, 1, 1, 1, 0,  // Linha 2
+        0, 0, 0, 0, 0,  // Linha 3
+        0, 1, 0, 1, 0,  // Linha 4
+        0, 1, 0, 1, 0   // Linha 5
+    };
+
+    // Exibe o padrão na matriz de LED
+    for (int i = 0; i < NUM_PIXELS; i++) {
+        put_pixel(carinha_triste[i] ? urgb_u32(100, 0, 0) : 0); // Vermelho para a carinha triste
+    }
+
+    printf("Carinha triste exibida na matriz de LED.\n");
+}
+
 // Função para exibir o resultado da avaliação de fadiga
 void exibir_resultado_fadiga(int pontuacao_total) {
     ssd1306_fill(&ssd, false);
@@ -216,36 +289,42 @@ void exibir_resultado_fadiga(int pontuacao_total) {
         ssd1306_draw_string(&ssd, "para conduzir", 8, 40);
         gpio_put(LED_VERDE, 1);
         gpio_put(LED_VERMELHO, 0);
+        exibir_carinha_feliz(); // Exibe carinha feliz na matriz de LED
     } else if (pontuacao_total >= 6 && pontuacao_total <= 9) {
         ssd1306_draw_string(&ssd, "Atencao!", 8, 20);
         ssd1306_draw_string(&ssd, "Recomenda-se", 8, 40);
         ssd1306_draw_string(&ssd, "descanso", 8, 50);
         gpio_put(LED_VERDE, 0);
         gpio_put(LED_VERMELHO, 1);
+        exibir_carinha_triste(); // Exibe carinha triste na matriz de LED
     } else if (pontuacao_total >= 10 && pontuacao_total <= 13) {
         ssd1306_draw_string(&ssd, "Alerta!", 8, 20);
         ssd1306_draw_string(&ssd, "Descanso", 8, 40);
         ssd1306_draw_string(&ssd, "imediato", 8, 50);
         gpio_put(LED_VERDE, 0);
         gpio_put(LED_VERMELHO, 1);
+        exibir_carinha_triste(); // Exibe carinha triste na matriz de LED
     } else if (pontuacao_total >= 14 && pontuacao_total <= 18) {
         ssd1306_draw_string(&ssd, "Perigo!", 8, 20);
         ssd1306_draw_string(&ssd, "Repouso", 8, 40);
         ssd1306_draw_string(&ssd, "urgente", 8, 50);
         gpio_put(LED_VERDE, 0);
         gpio_put(LED_VERMELHO, 1);
+        exibir_carinha_triste(); // Exibe carinha triste na matriz de LED
     }
     
     ssd1306_send_data(&ssd);
     sleep_ms(5000);
     gpio_put(LED_VERDE, 0);
     gpio_put(LED_VERMELHO, 0);
+    clear_led_matrix(); // Desliga a matriz de LED
 }
 
 int main() {
     stdio_init_all(); // Inicializa a comunicação serial
     inicializar_display();
     inicializar_gpio();
+    inicializar_ws2812(); // Inicializa o PIO e o controlador WS2812
 
     while (true) {
         // Anamnese no display
@@ -270,5 +349,6 @@ int main() {
 
         // Exibe o resultado da avaliação de fadiga
         exibir_resultado_fadiga(pontuacao_total);
+        sleep_ms(5000);
     }
 }
