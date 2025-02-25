@@ -134,7 +134,7 @@ void exibir_resposta(const char *resposta) {
     ssd1306_draw_string(&ssd, "Resposta:", 8, 20);
     ssd1306_draw_string(&ssd, resposta, 8, 40);
     ssd1306_send_data(&ssd);
-    sleep_ms(5000);
+    sleep_ms(2000);
     gpio_put(LED_VERDE, 0);
     gpio_put(LED_VERMELHO, 0);
 }
@@ -143,7 +143,7 @@ void exibir_resposta(const char *resposta) {
 int perguntas_anamnese() {
     const char *perguntas[][5] = {
         {"Voce sente", "pressao para", "cumprir prazos", "apertados de", "entrega?"},
-        {"Seu tempo de", "descanso eh", "suficiente", "antes da nova", "jornada?"},
+        {"Seu tempo de", "descanso eh", "insuficiente", "antes da nova", "jornada?"},
         {"Voce sente", "dificuldades", "para dormir?", NULL, NULL},
         {"Voce sente", "sonolencia", "excessiva", "durante", "o dia?"},
         {"Costuma usar", "cafeina ou", "energeticos", "para se manter", "acordado?"},
@@ -184,7 +184,7 @@ int sinais_vitais() {
     printf("Digite a frequencia cardiaca (bpm): ");
     scanf("%d", &frequencia_cardiaca);  
     printf("Frequencia cardiaca: %d bpm\n", frequencia_cardiaca);
-    sleep_ms(5000);
+    sleep_ms(2000);
 
     // Verifica se a frequência cardíaca está fora da faixa normal
     if (frequencia_cardiaca < 60 || frequencia_cardiaca > 100) pontuacao_sinais_vitais++;
@@ -197,7 +197,7 @@ int sinais_vitais() {
     snprintf(str, sizeof(str), "%d bpm", frequencia_cardiaca);  // Converter o inteiro para string
     ssd1306_draw_string(&ssd, str, 8, 30);  // Exibe o valor no display
     ssd1306_send_data(&ssd);
-    sleep_ms(3000);
+    sleep_ms(2000);
 
     // Solicitar e exibir a pressão arterial
     printf("Digite a pressao arterial sistolica (mmHg): ");
@@ -205,7 +205,7 @@ int sinais_vitais() {
     printf("Digite a pressao arterial diastolica (mmHg): ");
     scanf("%d", &pressao_arterial_diastolica);
     printf("Pressao arterial: %d x %d mmHg\n", pressao_arterial_sistolica, pressao_arterial_diastolica);
-    sleep_ms(5000);
+    sleep_ms(2000);
 
     // Verifica se a pressão arterial está fora da faixa normal
     if (pressao_arterial_sistolica < 100 || pressao_arterial_sistolica > 140 ||
@@ -218,13 +218,13 @@ int sinais_vitais() {
     snprintf(str, sizeof(str), "%d x %d mmHg", pressao_arterial_sistolica, pressao_arterial_diastolica);  // Converter pressão arterial para string
     ssd1306_draw_string(&ssd, str, 8, 30);  // Exibe o valor no display
     ssd1306_send_data(&ssd);
-    sleep_ms(3000);
+    sleep_ms(2000);
 
     // Solicitar e exibir a frequência respiratória
     printf("Digite a frequencia respiratoria (mrpm): ");
     scanf("%d", &frequencia_respiratoria);
     printf("Frequencia respiratoria: %d mrpm\n", frequencia_respiratoria);
-    sleep_ms(5000);
+    sleep_ms(2000);
 
     // Verifica se a frequência respiratória está fora da faixa normal
     if (frequencia_respiratoria < 12 || frequencia_respiratoria > 20) pontuacao_sinais_vitais++;
@@ -236,7 +236,7 @@ int sinais_vitais() {
     snprintf(str, sizeof(str), "%d mrpm", frequencia_respiratoria);  // Converter frequência respiratória para string
     ssd1306_draw_string(&ssd, str, 8, 30);  // Exibe o valor no display
     ssd1306_send_data(&ssd);
-    sleep_ms(3000);
+    sleep_ms(2000);
 
     return pontuacao_sinais_vitais;
 }
@@ -314,7 +314,7 @@ void exibir_resultado_fadiga(int pontuacao_total) {
     }
     
     ssd1306_send_data(&ssd);
-    sleep_ms(5000);
+    sleep_ms(2000);
     gpio_put(LED_VERDE, 0);
     gpio_put(LED_VERMELHO, 0);
     clear_led_matrix(); // Desliga a matriz de LED
@@ -331,16 +331,16 @@ int main() {
         ssd1306_fill(&ssd, false);
         ssd1306_draw_string(&ssd, "ANAMNESE", 30, 30);
         ssd1306_send_data(&ssd);
-        sleep_ms(3000);
+        sleep_ms(2000);
 
         int pontuacao_anamnese = perguntas_anamnese();
-        sleep_ms(5000); // Pausa antes de reiniciar o ciclo
+        sleep_ms(2000); // Pausa antes de reiniciar o ciclo
 
         // Sinais vitais no display
         ssd1306_fill(&ssd, false);
         ssd1306_draw_string(&ssd, "SINAIS VITAIS", 10, 30);
         ssd1306_send_data(&ssd);
-        sleep_ms(3000);
+        sleep_ms(2000);
 
         int pontuacao_sinais_vitais = sinais_vitais();
 
@@ -349,6 +349,6 @@ int main() {
 
         // Exibe o resultado da avaliação de fadiga
         exibir_resultado_fadiga(pontuacao_total);
-        sleep_ms(5000);
+        sleep_ms(3000);
     }
 }
