@@ -44,6 +44,15 @@ O sistema realiza as seguintes funcionalidades:
 3) Após a anamnese, o sistema solicita os sinais vitais via comunicação serial.  
 4) O sistema calcula a pontuação de fadiga e exibe o resultado no display e na matriz de LEDs.
 
+# Avaliação da fadiga
+Pontuação Total = Anamnese (0-10) + [Sinais Vitais (0-3) x 2] (Máximo: 16 pontos)  
+•	0 a 5 pontos – Baixa fadiga: Estado adequado para conduzir.  
+•	6 a 9 pontos – Moderada fadiga: Atenção necessária para evitar riscos. Recomenda-se descanso adicional.  
+•	10 a 13 pontos – Alta fadiga: Risco significativo de segurança. Descanso imediato e revisão da rotina.  
+•	14 a 18 pontos – Fadiga severa: Alto risco de acidentes. Requer repouso urgente e avaliação profissional.  
+Se a pontuação for de 0 a 5 pontos, aparece na matriz de LED 5 x 5 uma carinha feliz e uma mensagem no display: Adequado para conduzir. Caso contrário, aparece na matriz de LED 5 x 5 uma carinha triste e uma mensagem no display de acordo a faixa de pontuação: Atenção! Recomenda-se descanso; Atenção! Descanso imediato; Atenção! Repouso urgente.  
+
+
 # Link do vídeo  
 
 
