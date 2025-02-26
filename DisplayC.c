@@ -165,7 +165,7 @@ int perguntas_anamnese() {
         
         // Calcula a pontuação da anamnese
         if (i == 1) {
-            if (respostas[i] == 0) pontuacao_anamnese++; // Se a resposta for "Não", soma 1 ponto
+            if (respostas[i] == 0) pontuacao_anamnese++; // Se a resposta for "Não", soma 0 ponto
         } else {
             if (respostas[i] == 1) pontuacao_anamnese++; // Se a resposta for "Sim", soma 1 ponto
         }
@@ -304,7 +304,7 @@ void exibir_resultado_fadiga(int pontuacao_total) {
         gpio_put(LED_VERDE, 0);
         gpio_put(LED_VERMELHO, 1);
         exibir_carinha_triste(); // Exibe carinha triste na matriz de LED
-    } else if (pontuacao_total >= 14 && pontuacao_total <= 18) {
+    } else if (pontuacao_total >= 14 && pontuacao_total <= 16) {
         ssd1306_draw_string(&ssd, "Perigo!", 8, 20);
         ssd1306_draw_string(&ssd, "Repouso", 8, 40);
         ssd1306_draw_string(&ssd, "urgente", 8, 50);
@@ -349,6 +349,6 @@ int main() {
 
         // Exibe o resultado da avaliação de fadiga
         exibir_resultado_fadiga(pontuacao_total);
-        sleep_ms(3000);
+        sleep_ms(2000);
     }
 }
