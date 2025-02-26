@@ -45,6 +45,19 @@ O sistema realiza as seguintes funcionalidades:
 4) O sistema calcula a pontuação de fadiga e exibe o resultado no display e na matriz de LEDs.
 
 # Avaliação da fadiga
+A avaliação é feita baseada nos critérios abaixo:  
+I. ANAMNESE  
+Para cada resposta "Sim", soma 1 ponto.  
+Pontuação da Anamnese: 0 a 10 pontos (peso 1)  
+
+II. SINAIS VITAIS  
+Cada parâmetro fora da faixa normal adiciona 1 ponto:  
+•	Frequência cardíaca (FC) fora da faixa de 60-100 bpm.  
+•	Pressão arterial fora da faixa de 100-140 mmHg (sistólica) e 60-90 mmHg (diastólica).  
+•	Frequência respiratória (FR) fora da faixa de 12-20 mrpm.  
+Pontuação dos Sinais Vitais: 0 a 3 pontos (peso 2)  
+
+III. ESCALA DE FADIGA  
 Pontuação Total = Anamnese (0-10) + [Sinais Vitais (0-3) x 2] (Máximo: 16 pontos)  
 •	0 a 5 pontos – Baixa fadiga: Estado adequado para conduzir.  
 •	6 a 9 pontos – Moderada fadiga: Atenção necessária para evitar riscos. Recomenda-se descanso adicional.  
@@ -54,7 +67,7 @@ Se a pontuação for de 0 a 5 pontos, aparece na matriz de LED 5 x 5 uma carinha
 
 
 # Link do vídeo  
-
+https://drive.google.com/file/d/1Fh2N2aZ9t5mJutaN696Oe42eiu6yJ8jK/view?usp=sharing  
 
 # Desenvolvedora  
 Priscila Pereira Suzart de Carvalho
